@@ -26,29 +26,20 @@ CC=cc	#for Linux
 SWEOBJ = swedate.o swehouse.o swejpl.o swemmoon.o swemplan.o sweph.o\
 	 swephlib.o swecl.o swehel.o
 
-all:	swetest swetests swevents swemini
+all:	swetest swemini
 
 # build swetest with SE linked in, using dynamically linked system libraries libc, libm, libdl.
-swetest: swetest.o libswe.a
+swetest: swetest.o libswe.so
 	$(CC) $(OP) -o swetest swetest.o -L. -lswe -lm -ldl
-
-# build a statically linked version of swetest. first find out where libc.a and libm.a reside,
-# and add this path with -L like below
-# a statically linked program will run on any Linux variant, independent of dynamic system libraries.
-swetests: swetest.o $(SWEOBJ)
-	$(CC)  $(OP) -static -L/usr/lib/x86_64-redhat-linux6E/lib64/ -o swetests swetest.o $(SWEOBJ) -lm -ldl
 
 swevents: swevents.o $(SWEOBJ)
 	$(CC) $(OP) -o swevents swevents.o $(SWEOBJ) -lm -ldl
 
-swemini: swemini.o libswe.a
+swemini: swemini.o libswe.so
 	$(CC) $(OP) -o swemini swemini.o -L. -lswe -lm -ldl
 
 # create an archive and a dynamic link libary fro SwissEph
 # a user of this library will inlcude swephexp.h  and link with -lswe
-
-libswe.a: $(SWEOBJ)
-	ar r libswe.a	$(SWEOBJ)
 
 libswe.so: $(SWEOBJ)
 	$(CC) -shared -o libswe.so $(SWEOBJ)
@@ -62,7 +53,29 @@ test.exp:
 clean:
 	rm -f *.o swetest libswe*
 	cd setest && make clean
-	
+
+
+# Define default PREFIX if not provided
+PREFIX ?= /usr/local
+
+# Add an install target
+install: all
+	mkdir -p $(PREFIX)/bin
+	mkdir -p $(PREFIX)/lib
+	mkdir -p $(PREFIX)/include/sweph
+	cp -p swetest $(PREFIX)/bin
+	cp -p swemini $(PREFIX)/bin
+	cp -p libswe.so $(PREFIX)/lib
+	cp -p swephexp.h $(PREFIX)/include/sweph
+	cp -p sweodef.h $(PREFIX)/include/sweph
+	cp -p swedll.h $(PREFIX)/include/sweph
+	cp -p sweph.h $(PREFIX)/include/sweph
+	cp -p swephlib.h $(PREFIX)/include/sweph
+	cp -p swehouse.h $(PREFIX)/include/sweph
+	cp -p swejpl.h $(PREFIX)/include/sweph
+	cp -p swemptab.h $(PREFIX)/include/sweph
+	cp -p swenut2000a.h $(PREFIX)/include/sweph
+
 ###
 swecl.o: swejpl.h sweodef.h swephexp.h swedll.h sweph.h swephlib.h
 sweclips.o: sweodef.h swephexp.h swedll.h
