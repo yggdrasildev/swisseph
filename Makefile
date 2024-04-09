@@ -12,10 +12,10 @@
 # send email to the Swiss Ephemeris mailing list.
 # 
 
-CFLAGS =  -g -Wall -fPIC # for Linux and other gcc systems
+#CFLAGS =  -g -Wall -fPIC # for Linux and other gcc systems
 #CFLAGS =  -O2 -Wall -fPIC # for Linux and other gcc systems
-OP=$(CFLAGS)  
-CC=cc	#for Linux
+OP=$(CFLAGS) $(CPPFLAGS) -fPIC
+#CC=cc	#for Linux
 
 # compilation rule for general cases
 .o :
@@ -30,19 +30,19 @@ all:	swetest swemini
 
 # build swetest with SE linked in, using dynamically linked system libraries libc, libm, libdl.
 swetest: swetest.o libswe.so
-	$(CC) $(OP) -o swetest swetest.o -L. -lswe -lm -ldl
+	$(CC) $(LDFLAGS) $(OP) -o swetest swetest.o -L. -lswe -lm -ldl
 
 swevents: swevents.o $(SWEOBJ)
-	$(CC) $(OP) -o swevents swevents.o $(SWEOBJ) -lm -ldl
+	$(CC) $(LDFLAGS) $(OP) -o swevents swevents.o $(SWEOBJ) -lm -ldl
 
 swemini: swemini.o libswe.so
-	$(CC) $(OP) -o swemini swemini.o -L. -lswe -lm -ldl
+	$(CC) $(LDFLAGS) $(OP) -o swemini swemini.o -L. -lswe -lm -ldl
 
 # create an archive and a dynamic link libary fro SwissEph
 # a user of this library will inlcude swephexp.h  and link with -lswe
 
 libswe.so: $(SWEOBJ)
-	$(CC) -shared -o libswe.so $(SWEOBJ)
+	$(CC) $(LDFLAGS) -shared -o libswe.so $(SWEOBJ) -ldl
 
 test:
 	cd setest && make && ./setest t
