@@ -14,12 +14,12 @@
 
 #CFLAGS =  -g -Wall -fPIC # for Linux and other gcc systems
 #CFLAGS =  -O2 -Wall -fPIC # for Linux and other gcc systems
-OP=$(CFLAGS) $(CPPFLAGS) -fPIC
+OP=$(CFLAGS) $(CPPFLAGS)
 #CC=cc	#for Linux
 
 # compilation rule for general cases
 .o :
-	$(CC) $(OP) -o $@ $?
+	$(CC) $(OP) -static -o $@ $?
 .c.o:
 	$(CC) -c $(OP) $<     
 
@@ -29,25 +29,22 @@ SWEOBJ = swedate.o swehouse.o swejpl.o swemmoon.o swemplan.o sweph.o\
 all:	swetest swemini
 
 # build swetest with SE linked in, using dynamically linked system libraries libc, libm, libdl.
-swetest: swetest.o libswe.so
-	$(CC) $(LDFLAGS) $(OP) -o swetest swetest.o -L. -lswe
+swetest: swetest.o libswe.a
+	$(CC) $(LDFLAGS) $(OP) -o swetest swetest.o -L. libswe.a
 
 swevents: swevents.o $(SWEOBJ)
 	$(CC) $(LDFLAGS) $(OP) -o swevents swevents.o $(SWEOBJ)
 
-swemini: swemini.o libswe.so
-	$(CC) $(LDFLAGS) $(OP) -o swemini swemini.o -L. -lswe
+swemini: swemini.o libswe.a
+	$(CC) $(LDFLAGS) $(OP) -o swemini swemini.o -L. libswe.a
 
 # create an archive and a dynamic link libary fro SwissEph
 # a user of this library will inlcude swephexp.h  and link with -lswe
 
-libswe.so: $(SWEOBJ)
-	$(CC) $(LDFLAGS) -shared -o libswe.so $(SWEOBJ)
-
 ifneq (,$(findstring libtool,$(AR)))
 # macOS with libtool
 libswe.a: $(SWEOBJ)
-	$(AR) -static -o libswe.a $(SWEOBJ)
+	$(AR) -o libswe.a $(SWEOBJ)
 else
 # Linux and others with ar
 libswe.a: $(SWEOBJ)
@@ -75,7 +72,6 @@ install: all
 	mkdir -p $(PREFIX)/include/sweph
 	cp -p swetest $(PREFIX)/bin
 	cp -p swemini $(PREFIX)/bin
-	cp -p libswe.so $(PREFIX)/lib
 	cp -p libswe.a $(PREFIX)/lib
 	cp -p swephexp.h $(PREFIX)/include/sweph
 	cp -p sweodef.h $(PREFIX)/include/sweph
